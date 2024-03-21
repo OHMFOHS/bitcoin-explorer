@@ -16,6 +16,7 @@ import BitcoinInfo from '../components/BitcoinInfo';
 import Fees from '../components/Fees';
 import '../components/MainContent.css';
 import BarGraph from "../components/BarGraph";
+import CoinMarket from "../components/CoinMarket"
 
 async function getBitcoin(): Promise<BitcoinQuery> {
     return await graphqlClient.request(BitcoinDocument, {});
@@ -73,8 +74,15 @@ export default async function Home() {
                 </div>
             </div>
             <components.CountryNodeStats mempoolCountryNodes={mempoolCountryNodes} />
-            <div style={{ height: '300px', width: '800px' }}>
+            <div style={{ margin: '20px' }}>
+             <div style={{ height: '300px', width: '800px' }}>
                 <DistributionChart />
+            </div>   
+</div>
+            
+      
+            <div className="main-content">
+                <CoinMarket />
             </div>
         </main>
     );
