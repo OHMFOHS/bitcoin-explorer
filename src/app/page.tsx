@@ -105,6 +105,11 @@ export default async function Home() {
         </div>
       </div>
       <components.RankingData />
+
+      <div className="main-content">
+                <CoinMarket />
+            </div>
+            
     </main>
   );
 }
