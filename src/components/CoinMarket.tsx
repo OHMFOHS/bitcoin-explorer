@@ -1,12 +1,10 @@
 'use client'
 import React, { useState, useEffect } from 'react';
-//import CryptoTable from '../src/CryptoTable';
+import { GraphQLClient, gql } from 'graphql-request';
 import { CryptoCurrency } from '../types';
 import '../components/CoinMarket.css';
 
 
-const API_KEY = 'ca03946605mshd8750eb9ab2c318p14f711jsn46f75ccce0ef';
-const API_HOST = 'coinranking1.p.rapidapi.com';
 
 interface CryptoRowProps {
   data: CryptoCurrency;
@@ -106,12 +104,13 @@ const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 const fetchCryptos = async () => {
   try {
     const offset = (currentPage - 1) * itemsPerPage;
-    const response = await fetch(`https://${API_HOST}/coins?limit=${itemsPerPage}&offset=${offset}`, {
-          headers: {
-            'X-RapidAPI-Key': API_KEY,
-            'X-RapidAPI-Host': API_HOST,
-          },
-        });
+    // const response = await fetch(`https://${API_HOST}/coins?limit=${itemsPerPage}&offset=${offset}`, {
+    //       headers: {
+    //         'X-RapidAPI-Key': API_KEY,
+    //         'X-RapidAPI-Host': API_HOST,
+    //       },
+    //     });
+    const response = await fetch(`/api/coins?limit=${itemsPerPage}&offset=${offset}`);
     const data = await response.json();
     if (data && data.data && Array.isArray(data.data.coins)) {
       const coins: CryptoCurrency[] = data.data.coins;
@@ -119,12 +118,15 @@ const fetchCryptos = async () => {
       const coinsWithSupply = [];
       for (const coin of coins) {
         try {
-          const supplyResponse = await fetch(`https://${API_HOST}/coin/${coin.uuid}/supply`, {
-            headers: {
-              'X-RapidAPI-Key': API_KEY,
-              'X-RapidAPI-Host': API_HOST,
-            },
-          });
+          // const supplyResponse = await fetch(`https://${API_HOST}/coin/${coin.uuid}/supply`, {
+          //   headers: {
+          //     'X-RapidAPI-Key': API_KEY,
+          //     'X-RapidAPI-Host': API_HOST,
+          //   },
+          // });
+          //const supplyResponse = await fetch(`https://${API_HOST}/coin/${coin.uuid}/supply`);
+          const supplyResponse = await fetch(`/api/supply?coinUuid=${coin.uuid}`);
+          
           const supplyData = await supplyResponse.json();
           if (supplyData && supplyData.status === 'success') {
             coinsWithSupply.push({

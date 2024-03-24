@@ -12,6 +12,7 @@ import { components } from "../components";
 import DistributionChart from "./components/minerdistributionpool/DistributionChart";
 import MinerDetails from "./minerdetails/page";
 import "bootstrap/dist/css/bootstrap.min.css";
+import CoinMarket from "../components/CoinMarket"
 
 //Mainent Imports
 import MarketData from "../components/MarketData";
