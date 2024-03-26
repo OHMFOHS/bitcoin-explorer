@@ -1,9 +1,10 @@
 'use client'
 import React, { useState, useEffect } from 'react';
-import { GraphQLClient, gql } from 'graphql-request';
+import { graphqlClient } from "@/graphql/client";
+import { GetCoinsDocument } from "@/graphql/__generated__/graphql";
+import { GetCoinsWithSupplyDocument } from "@/graphql/__generated__/graphql";
 import { CryptoCurrency } from '../types';
 import '../components/CoinMarket.css';
-
 
 
 interface CryptoRowProps {
@@ -90,7 +91,7 @@ const CryptoTable: React.FC<CryptoTableProps> = ({ cryptos }) => {
 const App: React.FC = () => {
   const [cryptos, setCryptos] = useState<CryptoCurrency[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage, setItemsPerPage] = useState(10); 
+  const [limit, setItemsPerPage] = useState(10); 
 
 
   const goToPage = (number: number) => {
@@ -99,58 +100,52 @@ const App: React.FC = () => {
 
 
   useEffect(() => {
-
-const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
-const fetchCryptos = async () => {
-  try {
-    const offset = (currentPage - 1) * itemsPerPage;
-    // const response = await fetch(`https://${API_HOST}/coins?limit=${itemsPerPage}&offset=${offset}`, {
-    //       headers: {
-    //         'X-RapidAPI-Key': API_KEY,
-    //         'X-RapidAPI-Host': API_HOST,
-    //       },
-    //     });
-    const response = await fetch(`/api/coins?limit=${itemsPerPage}&offset=${offset}`);
-    const data = await response.json();
-    if (data && data.data && Array.isArray(data.data.coins)) {
-      const coins: CryptoCurrency[] = data.data.coins;
-
-      const coinsWithSupply = [];
-      for (const coin of coins) {
-        try {
-          // const supplyResponse = await fetch(`https://${API_HOST}/coin/${coin.uuid}/supply`, {
-          //   headers: {
-          //     'X-RapidAPI-Key': API_KEY,
-          //     'X-RapidAPI-Host': API_HOST,
-          //   },
-          // });
-          //const supplyResponse = await fetch(`https://${API_HOST}/coin/${coin.uuid}/supply`);
-          const supplyResponse = await fetch(`/api/supply?coinUuid=${coin.uuid}`);
-          
-          const supplyData = await supplyResponse.json();
-          if (supplyData && supplyData.status === 'success') {
-            coinsWithSupply.push({
-              ...coin,
-              circulatingSupply: supplyData.data.supply.circulatingAmount,
-              maxSupply: supplyData.data.supply.maxAmount,
-            });
-          } else {
-            coinsWithSupply.push(coin);
-          }
-          await delay(50); 
-        } catch (error) {
-          console.error('Fetching supply data failed', error);
-          coinsWithSupply.push(coin);
+    const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+  
+    const fetchCryptos = async () => {
+      try {
+        const offset = (currentPage - 1) * limit;
+        const variables = { limit, offset };
+  
+        // 使用GraphQL客户端请求获取加密货币列表
+        const response = await graphqlClient.request(GetCoinsDocument, variables);
+        let coinsData = response.rapaidapi.cryptocurrencyListResponse.data.coins;
+  
+        // 准备容纳带有供应信息的加密货币的数组
+        let coinsWithSupply = [];
+  
+        // 遍历每一个加密货币，获取它们的供应信息
+        for (const coin of coinsData) {
+          const supplyVariables = { coinUuid: coin.uuid };
+  
+          // 获取单个加密货币的供应信息
+          const supplyResponse = await graphqlClient.request(GetCoinsWithSupplyDocument, supplyVariables);
+          const supplyData = supplyResponse.rapaidapi.coinSupplyResponse.data.supply;
+  
+          // 构建新的加密货币对象，包含供应信息，并添加到数组中
+          const coinWithSupply = {
+            ...coin,
+            circulatingSupply: supplyData.circulatingAmount,
+            maxSupply: supplyData.maxAmount,
+          };
+  
+          coinsWithSupply.push(coinWithSupply);
+  
+          // 延迟以避免过快发送请求
+          await delay(50);
         }
+  
+        // 更新状态以渲染带有供应信息的加密货币列表
+        setCryptos(coinsWithSupply);
+      } catch (error) {
+        console.error('Fetching cryptos failed', error);
       }
-      setCryptos(coinsWithSupply);
-    }
-  } catch (error) {
-    console.error('Fetching cryptos failed', error);
-  }
-};
-fetchCryptos();
-}, [currentPage, itemsPerPage]);
+    };
+  
+    fetchCryptos();
+  }, [currentPage, limit]);
+  
+
 
 const nextPage = () => setCurrentPage((prev) => prev + 1);
 const prevPage = () => setCurrentPage((prev) => Math.max(1, prev - 1));

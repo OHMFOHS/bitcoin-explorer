@@ -63,12 +63,11 @@ export interface ApiResponse {
 
 
 export interface CryptoCurrency {
-  id: number;
   name: string;
   iconUrl: string;
   marketCap: string;
   price: string;
-  rank: string;
+  rank: number;
   uuid: string;
   circulatingSupply?: string;
   maxSupply?: string;

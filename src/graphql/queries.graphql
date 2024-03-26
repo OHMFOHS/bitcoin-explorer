@@ -301,3 +301,47 @@ query GetDailyBlockCounts {
         }
     }
 }
+
+
+query GetCoins($limit: Int, $offset: Int){
+    rapaidapi {
+        cryptocurrencyListResponse(offset: $offset, limit: $limit) {
+            status
+            data {
+                coins {
+                    coinrankingUrl
+                    sparkline
+                    rank
+                    change
+                    listedAt
+                    btcPrice
+                    price
+                    marketCap
+                    iconUrl
+                    color
+                    name
+                    symbol
+                    uuid
+                }
+            }
+        }
+    }
+}
+
+
+query GetCoinsWithSupply($coinUuid: String!) {
+    rapaidapi {
+        coinSupplyResponse(coinUuid: $coinUuid) {
+            status
+            data {
+                supply {
+                    circulatingAmount
+                    circulatingSyncedAt
+                    totalAmount
+                    totalSyncedAt
+                    maxAmount
+                }
+            }
+        }
+    }
+}
